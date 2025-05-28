@@ -1,0 +1,84 @@
+# 任务管理系统完整Docker配置 - 使用本地已有镜像
+services:
+  mysql:
+    image: mysql:latest
+    container_name: taskmanager-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: task_manager
+      MYSQL_USER: taskuser
+      MYSQL_PASSWORD: taskpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./后端模块/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: taskmanager-minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: 12345678
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 自定义后端镜像构建
+  backend:
+    build:
+      context: ./后端模块
+      dockerfile: Dockerfile.local
+    container_name: taskmanager-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: task_manager
+      SERVER_PORT: 8080
+      JWT_KEY: your_secret_key_for_jwt_please_change_in_production
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: 12345678
+      MINIO_BUCKET: taskmanager
+
+  # 自定义前端镜像构建
+  frontend:
+    build:
+      context: ./前端模块
+      dockerfile: Dockerfile.local
+    container_name: taskmanager-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  mysql_data:
+  minio_data:

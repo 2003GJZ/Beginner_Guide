@@ -1,0 +1,13 @@
+# 完全离线构建 - 使用本地构建的静态文件
+FROM scratch
+
+WORKDIR /app
+
+# 复制本地构建的静态文件
+COPY dist/ /app/
+
+# 设置环境变量
+ENV PORT=8081
+
+# 暴露端口
+EXPOSE 8081

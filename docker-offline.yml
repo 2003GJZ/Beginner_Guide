@@ -1,0 +1,33 @@
+# 任务管理系统离线Docker配置 - 完全使用本地已有容器
+services:
+  # 后端服务 - 直接使用本地编译
+  backend:
+    build:
+      context: ./后端模块
+      dockerfile: Dockerfile.offline
+    container_name: taskmanager-backend
+    restart: always
+    network_mode: "host"
+    environment:
+      DB_HOST: localhost
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: task_manager
+      SERVER_PORT: 8080
+      JWT_KEY: your_secret_key_for_jwt_please_change_in_production
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: 12345678
+      MINIO_BUCKET: taskmanager
+
+  # 前端服务 - 直接使用本地编译
+  frontend:
+    build:
+      context: ./前端模块
+      dockerfile: Dockerfile.offline
+    container_name: taskmanager-frontend
+    restart: always
+    network_mode: "host"
+    environment:
+      PORT: 8081

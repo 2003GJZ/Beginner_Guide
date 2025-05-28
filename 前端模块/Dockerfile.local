@@ -1,0 +1,19 @@
+# 使用本地node镜像
+FROM node:latest
+
+WORKDIR /app
+
+# 复制项目文件
+COPY . .
+
+# 安装依赖并构建
+RUN npm install && npm run build
+
+# 安装简单的HTTP服务器
+RUN npm install -g http-server
+
+# 暴露端口
+EXPOSE 80
+
+# 启动HTTP服务器提供静态文件
+CMD ["http-server", "dist", "-p", "80"]
