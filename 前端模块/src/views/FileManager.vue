@@ -50,7 +50,7 @@
     <el-dialog title="文件预览" :visible.sync="previewVisible" width="70%">
       <div class="preview-container" v-if="currentFile">
         <div v-if="isImage(currentFile.fileType)">
-          <img :src="currentFile.fileUrl" class="preview-image" />
+          <img :src="currentFile.fileUrl" class="preview-image"  alt=""/>
         </div>
         <div v-else-if="isPdf(currentFile.fileType)">
           <iframe :src="currentFile.fileUrl" class="preview-frame"></iframe>
@@ -138,12 +138,11 @@ export default {
       
       this.uploading = true
       try {
-        const response = await axios.post('/api/file/upload', formData, {
+        await axios.post('/api/file/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
-        })
-        
+        });
         this.$message.success('文件上传成功')
         this.selectedFile = null
         this.$refs.fileInput.value = ''
